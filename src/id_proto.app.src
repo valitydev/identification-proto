@@ -1,0 +1,11 @@
+{application, id_proto, [
+    {description, "Thrift proto for identification"},
+    {vsn, "0.1.0"},
+    {applications, [
+        kernel,
+        stdlib
+    ]},
+    {maintainers, [
+        "Anton Belyaev <a.belyaev@rbkmoney.com>"
+    ]}
+]}.
