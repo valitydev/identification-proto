@@ -4,8 +4,8 @@
  * commit id: b0806eb1d55646cbb937206ad8183e6d3f62719a
  */
 
-namespace java com.rbkmoney.damsel.identification.base
-namespace erlang identification_base
+namespace java com.rbkmoney.identity.base
+namespace erlang identity_base
 
 /** Идентификатор */
 typedef string ID

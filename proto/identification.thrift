@@ -1,18 +1,24 @@
-namespace java com.rbkmoney.damsel.identity
+/**
+ * Сервис идентификации, хранения статуса идентификации
+ * и привязки идентифицированной сущности к ее владельцу.
+ */
+
+namespace java com.rbkmoney.identity
 namespace erlang identity
 
 include "base.thrift"
+include "context.thrift"
 
-typedef base.ID     IdentityID
-typedef base.ID     EntityID
-typedef base.ID     IdentityClaimID
-typedef base.Opaque IdentityDocumentToken
+typedef base.ID                 IdentityID
+typedef base.ID                 EntityID
+typedef base.ID                 IdentityClaimID
+typedef base.Opaque             IdentityDocumentToken
 
-typedef list<IdentityDocumentToken> IdentityDocuments
+typedef list<IdentityDocument>  IdentityDocuments
 
 struct Identity {
     1: required IdentityID          id
-    2: optional EntityID            owner_id
+    2: optional EntityID            owner_id   // владелец идентификации
     3: optional IdentificationLevel level
 }
 
@@ -22,36 +28,58 @@ enum IdentificationLevel {
     full    = 300
 }
 
-struct IdentityClaimParams {
-    1: required IdentificationLevel target_level
-    2: required EntityID            claimant
-    3: required IdentityDocuments   proof
-    4: optional IdentityID          identity_id
-}
-
+/**
+ * Заявка на изменение статуса идентификации.
+ */
 struct IdentityClaim {
-    1: required IdentityClaimID     id
-    2: required IdentityID          identity_id
-    3: required EntityID            claimant
-    5: required IdentificationLevel target_level
-    6: required IdentityDocuments   proof
-    7: required IdentityClaimStatus status
+    1: required IdentityClaimID        id
+    2: required IdentityID             identity_id
+    3: required EntityID               claimant
+    4: required IdentificationLevel    target_level
+    5: required IdentityDocuments      proof
+    6: required IdentityClaimStatus    status
+
+    99: optional context.ContextSet    context  // непрозрачный контекст заявки
 }
 
 union IdentityClaimStatus {
     1: ClaimCreated   created
-    2: ClaimApproved  approved
-    3: ClaimDenied    denied
-    4: ClaimCancelled cancelled
-    5: ClaimFailed    failed
+    2: ClaimReview    review
+    3: ClaimApproved  approved
+    4: ClaimDenied    denied
+    5: ClaimCancelled cancelled
+    6: ClaimFailed    failed
 }
 
+/**
+ * Для получения статуса полной (full) или нулевой (none) идентификации
+ * заявка сразу создается в статусе review и ждет принятия решения
+ * с api сервиса IdentificationJudgement.
+ *
+ * Для получения статуса частичной (partial) идентификации статус review проходит
+ * в автоматическом режиме.
+ */
+
 struct ClaimCreated   { 1: optional string details }
+struct ClaimReview    { 1: optional string details }
 struct ClaimApproved  { 1: optional string details }
 struct ClaimDenied    { 1: optional string details }
 struct ClaimCancelled { 1: optional string details }
 
 typedef Failure ClaimFailed
+
+struct IdentityDocument {
+    1: required IdentityDocumentType  type
+    2: required IdentityDocumentToken token
+}
+
+union IdentityDocumentType {
+    1: RUSDomesticPassport     rus_domestic_passport
+    2: RUSRetireeInsuranceCert rus_retiree_insurance_cert
+}
+
+struct RUSDomesticPassport     {}
+struct RUSRetireeInsuranceCert {}
 
 /**
  * Структура Failure заимствована из damsel/proto/domain.thrift
@@ -88,26 +116,43 @@ struct SubFailure {
     2: optional SubFailure  sub
 }
 
-exception ClaimNotFound                 {}
-exception IdentityNotFound              {}
-exception InsufficientIdentityDocuments {}
+struct IdentityClaimParams {
+    1: required IdentityID             identity_id
+    2: required IdentificationLevel    target_level
+    3: required EntityID               claimant
+    4: required IdentityDocuments      proof
 
-exception AnotherClaimActive        { 1: required IdentityClaimID id }
+    99: optional context.ContextSet    context
+}
+
+exception ClaimNotFound                    {}
+exception IdentityNotFound                 {}
+exception InsufficientIdentityDocuments    {}
+exception InvalidTargetIdentificationLevel {}
+exception IdentityDocumentNotFound         { 1: required IdentityDocumentToken token }
+
+exception ClaimPending              { 1: required IdentityClaimID id }
 exception IdentityOwnershipConflict { 1: required EntityID id }
 exception InvalidClaimStatus        { 1: required IdentityClaimStatus status }
 
-service Identificaiton {
+service Identification {
 
     Identity Get (1: IdentityID id)
         throws (1: IdentityNotFound ex1)
 
-    IdentityClaimID CreateClaim (1: IdentityClaimParams params)
+    IdentityID GetIdentityID (1: IdentityDocuments proof)
         throws (
-            1: InsufficientIdentityDocuments ex1
-            2: AnotherClaimActive            ex2
-            3: IdentityOwnershipConflict     ex3
-            4: IdentityNotFound              ex4
-        )
+            1: IdentityDocumentNotFound      ex1
+            2: InsufficientIdentityDocuments ex2
+    )
+
+    IdentityClaim CreateClaim (1: IdentityClaimParams params)
+        throws (
+            1: InsufficientIdentityDocuments    ex1
+            2: ClaimPending                     ex2
+            3: IdentityOwnershipConflict        ex3
+            4: InvalidTargetIdentificationLevel ex4
+    )
 
     IdentityClaim GetClaim (1: IdentityClaimID id)
         throws (1: ClaimNotFound ex1)
@@ -123,10 +168,16 @@ service Identificaiton {
 service IdentificationJudgement {
 
     IdentityClaim Approve (1: IdentityClaimID id)
-        throws (1: ClaimNotFound ex1, 2: InvalidClaimStatus ex2)
+        throws (
+            1: ClaimNotFound ex1,
+            2: InvalidClaimStatus ex2
+    )
 
     IdentityClaim Deny (1: IdentityClaimID id)
-        throws (1: ClaimNotFound ex1, 2: InvalidClaimStatus ex2)
+        throws (
+            1: ClaimNotFound ex1,
+            2: InvalidClaimStatus ex2
+    )
 
 /*
  *  Identity ResetIdentityOwner (1: IdentityID id)
