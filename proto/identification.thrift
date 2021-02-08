@@ -125,8 +125,6 @@ struct IdentityClaimParams {
     99: optional context.ContextSet    context
 }
 
-typedef string IdentityClass
-
 exception ClaimNotFound                    {}
 exception IdentityNotFound                 {}
 exception InsufficientIdentityDocuments    {}
@@ -142,7 +140,7 @@ service Identification {
     Identity Get (1: IdentityID id)
         throws (1: IdentityNotFound ex1)
 
-    IdentityID GetIdentityID (1: IdentityDocuments proof, 2: IdentityClass identity_class, 3: IdentityID default_id)
+    IdentityID GetIdentityID (1: IdentityDocuments proof)
         throws (
             1: IdentityDocumentNotFound      ex1
             2: InsufficientIdentityDocuments ex2
