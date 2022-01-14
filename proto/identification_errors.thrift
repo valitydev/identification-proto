@@ -1,4 +1,4 @@
-namespace java com.rbkmoney.damsel.identity.errors
+namespace java dev.vality.damsel.identity.errors
 namespace erlang identity_err
 
 

@@ -1,4 +1,4 @@
-namespace java com.rbkmoney.identity.msgpack
+namespace java dev.vality.identity.msgpack
 namespace erlang identity_msgpack
 
 /**

@@ -3,7 +3,7 @@
  * и привязки идентифицированной сущности к ее владельцу.
  */
 
-namespace java com.rbkmoney.identity
+namespace java dev.vality.identity
 namespace erlang identity
 
 include "base.thrift"
