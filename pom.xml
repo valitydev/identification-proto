@@ -17,6 +17,28 @@
     <name>identification-proto</name>
     <description>Generates jar artifact containing compiled thrift classes based on generated thrift IDL files
     </description>
+    <url>https://github.com/valitydev/identification-proto</url>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <email>devs@vality.dev</email>
+            <organization>Vality</organization>
+            <organizationUrl>https://vality.dev</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/valitydev/identification-proto</connection>
+        <developerConnection>scm:git:ssh://github.com/valitydev/identification-proto</developerConnection>
+        <url>https://github.com/valitydev/identification-proto/tree/master</url>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
