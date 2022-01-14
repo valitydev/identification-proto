@@ -4,8 +4,5 @@
     {applications, [
         kernel,
         stdlib
-    ]},
-    {maintainers, [
-        "Anton Belyaev <a.belyaev@rbkmoney.com>"
     ]}
 ]}.
